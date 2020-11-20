@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--日志级别以及优先级排序: OFF > FATAL > ERROR > WARN > INFO > DEBUG > TRACE > ALL -->
+<!--status="WARN" :用于设置log4j2自身内部日志的信息输出级别，默认是OFF-->
+<!--monitorInterval="30"  :间隔秒数,自动检测配置文件的变更和重新配置本身-->
+<configuration status="WARN" monitorInterval="30">
+    <Properties>
+        <!--自定义一些常量，之后使用${变量名}引用-->
+        <Property name="log_home">/home/log4j2/</Property>
+        <Property name="server_name">test</Property>
+        <Property name="stdout_pattern">%d %5.5p %-40.40c{39}:%L - %m%n</Property>
+        <Property name="file_pattern">%d %5.5p %-40.40l{39}%-L{39} - %m%n</Property>
+        <Property name="interval">24</Property>
+        <Property name="max_file_size">100 MB</Property>
+        <Property name="max_history">15</Property>
+
+    </Properties>
+    <!--appenders:定义输出内容,输出格式,输出方式,日志保存策略等,常用其下三种标签[console,File,RollingFile]-->
+    <appenders>
+        <!--console :控制台输出的配置-->
+        <console name="stdout" target="SYSTEM_OUT">
+            <!--PatternLayout :输出日志的格式,LOG4J2定义了输出代码，包含了日志颜色-->
+            <PatternLayout pattern="${stdout_pattern}"/>
+        </console>
+        <!--File :同步输出日志到本地文件-->
+        <!--append="false" :根据其下日志策略,每次清空文件重新输入日志,可用于测试-->
+<!--                <File name="log" fileName="${log_home}/${server_name}/all.log" append="false">-->
+<!--                    <PatternLayout pattern="${file_pattern}"/>-->
+<!--                </File>-->
+        <!--SMTP :邮件发送日志-->
+<!--        <SMTP name="Mail"-->
+<!--              subject="TEST系统正式版异常信息"-->
+<!--              to="wbb@xdja.com" from="wbb@xdja.com"-->
+<!--              smtpUsername="wbb@xdja.com"-->
+<!--              smtpPassword="Xdja@123"-->
+<!--              smtpHost="mail.xdja.com"-->
+<!--              smtpDebug="false"-->
+<!--              smtpPort="587"-->
+<!--              bufferSize="10">-->
+<!--            <PatternLayout pattern="${file_pattern}"/>-->
+<!--        </SMTP>-->
+        <!-- ${log_home} :日志根目录 -->
+        <RollingFile name="all_file" fileName="${log_home}/${server_name}/all.log" filePattern="${log_home}/${server_name}/all/%d{yyyy-MM-dd}/all.%i.log.zip">
+            <!--ThresholdFilter :日志输出过滤-->
+            <!--level="info" :日志级别,onMatch="ACCEPT" :级别在info之上则接受,onMismatch="DENY" :级别在info之下则拒绝-->
+            <ThresholdFilter level="all" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout pattern="${file_pattern}"/>
+            <!-- Policies :日志滚动策略-->
+            <Policies>
+                <!-- TimeBasedTriggeringPolicy :时间滚动策略,默认0点小时产生新的文件,interval="6" : 自定义文件滚动时间间隔,每隔6小时产生新文件, modulate="true" : 产生文件是否以0点偏移时间,即6点,12点,18点,0点-->
+                <TimeBasedTriggeringPolicy interval="${interval}" modulate="true"/>
+                <!-- SizeBasedTriggeringPolicy :文件大小滚动策略-->
+                <SizeBasedTriggeringPolicy size="${max_file_size}"/>
+            </Policies>
+            <!-- DefaultRolloverStrategy属性如不设置，则默认为最多同一文件夹下7个文件，这里设置了20 -->
+            <DefaultRolloverStrategy max="${max_history}"/>
+        </RollingFile>
+    </appenders>
+    <!--然后定义logger，只有定义了logger并引入的appender，appender才会生效-->
+    <loggers>
+        <!--AsyncLogger :异步日志,LOG4J有三种日志模式,全异步日志,混合模式,同步日志,性能从高到底,线程越多效率越高,也可以避免日志卡死线程情况发生-->
+        <!--        additivity="false" : additivity设置事件是否在root logger输出，为了避免重复输出，可以在Logger 标签下设置additivity为”false”-->
+        <AsyncLogger name="async_all_file" level="trace" includeLocation="true" additivity="false">
+            <appender-ref ref="all_file"/>
+        </AsyncLogger>
+        <!--过滤掉spring和mybatis的一些无用的DEBUG信息-->
+        <!--Logger节点用来单独指定日志的形式，name为包路径,比如要为org.springframework包下所有日志指定为INFO级别等。 -->
+        <!-- Root节点用来指定项目的根日志，如果没有单独指定Logger，那么就会默认使用该Root日志输出 -->
+        <root level="all">
+            <appender-ref ref="stdout"/>
+            <appender-ref ref="all_file"/>
+        </root>
+
+    </loggers>
+</configuration>

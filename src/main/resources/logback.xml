@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration debug="false" scan="true" scanPeriod="60 seconds">
+    <!--输出到文件属性-->
+    <property name="ENCODER_CHARSET" value="UTF-8"/><!--日志编码-->
+    <property name="LOG_HOME" value="/home/logs/fdap"/><!--日志根目录-->
+    <property name="SERVER_NAME" value="web"/><!--服务名字-->
+    <property name="maxFileSize" value="10MB"/><!--单个文件大小-->
+    <property name="maxHistory" value="15"/><!--日志保存天数-->
+    <property name="totalSizeCap" value="5GB"/><!--日志总大小-->
+
+
+    <property name="CONSOLE_LOG_PATTERN" value="%magenta([%d]) %highlight(%5.5p) %cyan(%-40.40c{39}) : %m%n"/>
+    <property name="FILE_LOG_PATTERN" value="%d %5.5p %-40.40c{39}:L %m%n"/>
+    <!-- 定义服务的名字 -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+            <charset>${ENCODER_CHARSET}</charset>
+        </encoder>
+    </appender>
+
+
+    <appender name="ALL_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_HOME}/${SERVER_NAME}/all.log</file>
+        <append>true</append>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_HOME}/${SERVER_NAME}/info/%d{yyyy-MM-dd}/all.%i.zip</fileNamePattern>
+            <maxFileSize>${maxFileSize}</maxFileSize>
+            <maxHistory>${maxHistory}</maxHistory>
+            <totalSizeCap>${totalSizeCap}</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+            <charset>${ENCODER_CHARSET}</charset>
+        </encoder>
+    </appender>
+
+
+    <appender name="INFO_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_HOME}/${SERVER_NAME}/info.log</file>
+        <append>true</append>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_HOME}/${SERVER_NAME}/info/%d{yyyy-MM-dd}/info.%i.zip</fileNamePattern>
+            <maxFileSize>${maxFileSize}</maxFileSize>
+            <maxHistory>${maxHistory}</maxHistory>
+            <totalSizeCap>${totalSizeCap}</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+            <charset>${ENCODER_CHARSET}</charset>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>INFO</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+    </appender>
+
+    <appender name="WARN_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_HOME}/${SERVER_NAME}/warn.log</file>
+        <append>true</append>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_HOME}/${SERVER_NAME}/warn/%d{yyyy-MM-dd}/warn.%i.zip</fileNamePattern>
+            <maxFileSize>${maxFileSize}</maxFileSize>
+            <maxHistory>${maxHistory}</maxHistory>
+            <totalSizeCap>${totalSizeCap}</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+            <charset>${ENCODER_CHARSET}</charset>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>WARN</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+    </appender>
+
+    <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_HOME}/${SERVER_NAME}/error.log</file>
+        <append>true</append>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_HOME}/${SERVER_NAME}/error/%d{yyyy-MM-dd}/error.%i.zip</fileNamePattern>
+            <maxFileSize>${maxFileSize}</maxFileSize>
+            <maxHistory>${maxHistory}</maxHistory>
+            <totalSizeCap>${totalSizeCap}</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+            <charset>${ENCODER_CHARSET}</charset>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="ALL_FILE"/>
+        <appender-ref ref="INFO_FILE"/>
+        <appender-ref ref="WARN_FILE"/>
+        <appender-ref ref="ERROR_FILE"/>
+    </root>
+</configuration>
