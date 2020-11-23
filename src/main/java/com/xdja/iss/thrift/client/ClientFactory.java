@@ -2,7 +2,7 @@ package com.xdja.iss.thrift.client;
 
 import com.xdja.iss.thrift.stub.RPCManagerStub;
 import lombok.Builder;
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.pool2.BasePooledObjectFactory;
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
@@ -13,7 +13,7 @@ import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
 
-@Log4j2
+@Slf4j
 @Builder
 public class ClientFactory extends BasePooledObjectFactory<RPCManagerStub.Client> {
 

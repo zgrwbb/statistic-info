@@ -3,17 +3,18 @@ package com.xdja.iss.thrift.client;
 import com.xdja.iss.thrift.datatype.ResStr;
 import com.xdja.iss.thrift.stub.RPCManagerStub;
 import lombok.Getter;
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 
 /**
  * @author wbb
  */
-@Log4j2
+@Slf4j
 @SuppressWarnings({"java:S112", "java:S1192", "java:S2696", "unused", "java:S1226", "java:S1854"})
 public class StatisticClient {
 
-    private static GenericObjectPool<RPCManagerStub.Client> pool;
+    @Getter
+    public static GenericObjectPool<RPCManagerStub.Client> pool;
     @Getter
     private final int timeout;
     @Getter
@@ -25,28 +26,6 @@ public class StatisticClient {
         this.host = host;
         this.port = port;
         this.timeout = timeout;
-    }
-
-    public static void main(String[] args) {
-        StatisticClient statisticClient = new StatisticClient(args[0], Integer.parseInt(args[1]), Integer.parseInt(args[2]));
-        statisticClient.init();
-        for (int i = 0; i < Integer.parseInt(args[3]); i++) {
-            Thread thread = new Thread(() -> {
-                RPCManagerStub.Client client = null;
-                try {
-                    client = pool.borrowObject();
-                    if (client != null) {
-                        ResStr res = client.echo("OK");
-                        log.info("{}", res);
-                    }
-                } catch (Exception e) {
-                    log.error("", e);
-                } finally {
-                    pool.returnObject(client);
-                }
-            });
-            thread.start();
-        }
     }
 
     /**
