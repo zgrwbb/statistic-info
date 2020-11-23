@@ -2,24 +2,23 @@ package com.xdja.iss.thrift.client;
 
 import com.xdja.iss.thrift.datatype.ResStr;
 import com.xdja.iss.thrift.stub.RPCManagerStub;
+import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
-import org.apache.thrift.TException;
-import org.apache.thrift.protocol.TBinaryProtocol;
-import org.apache.thrift.protocol.TProtocol;
-import org.apache.thrift.transport.TFramedTransport;
-import org.apache.thrift.transport.TSocket;
-import org.apache.thrift.transport.TTransport;
-import org.apache.thrift.transport.TTransportException;
+import org.apache.commons.pool2.impl.GenericObjectPool;
 
 /**
- * @author lxl
+ * @author wbb
  */
 @Log4j2
-@SuppressWarnings({"java:S112", "java:S2696", "unused", "java:S1226", "java:S1854"})
+@SuppressWarnings({"java:S112", "java:S1192", "java:S2696", "unused", "java:S1226", "java:S1854"})
 public class StatisticClient {
 
+    private static GenericObjectPool<RPCManagerStub.Client> pool;
+    @Getter
     private final int timeout;
+    @Getter
     private final String host;
+    @Getter
     private final int port;
 
     public StatisticClient(String host, int port, int timeout) {
@@ -29,14 +28,24 @@ public class StatisticClient {
     }
 
     public static void main(String[] args) {
-        log.info("{}", (Object) args);
-        try (TTransport transport = new TFramedTransport(new TSocket(args[0], Integer.parseInt(args[1]), Integer.parseInt(args[1])))) {
-            transport.open();
-            TProtocol protocol = new TBinaryProtocol(transport);
-            RPCManagerStub.Client client = new RPCManagerStub.Client(protocol);
-            log.info("{}", client.echo("OK"));
-        } catch (Exception e) {
-            e.printStackTrace();
+        StatisticClient statisticClient = new StatisticClient(args[0], Integer.parseInt(args[1]), Integer.parseInt(args[2]));
+        statisticClient.init();
+        for (int i = 0; i < Integer.parseInt(args[3]); i++) {
+            Thread thread = new Thread(() -> {
+                RPCManagerStub.Client client = null;
+                try {
+                    client = pool.borrowObject();
+                    if (client != null) {
+                        ResStr res = client.echo("OK");
+                        log.info("{}", res);
+                    }
+                } catch (Exception e) {
+                    log.error("", e);
+                } finally {
+                    pool.returnObject(client);
+                }
+            });
+            thread.start();
         }
     }
 
@@ -48,18 +57,21 @@ public class StatisticClient {
      */
 
     public ResStr queryService(String ext) {
-        try (TTransport transport = new TFramedTransport(new TSocket(host, port, timeout))) {
-            transport.open();
-            TProtocol protocol = new TBinaryProtocol(transport);
-            RPCManagerStub.Client client = new RPCManagerStub.Client(protocol);
-            return client.queryService(ext);
-        } catch (TTransportException e) {
-            log.error("", e);
-            throw new RuntimeException("建立RPC链接失败");
-        } catch (TException e) {
-            log.error("查询业务信息失败, ext: {}", ext, e);
+        RPCManagerStub.Client client = null;
+        try {
+            client = pool.borrowObject();
+            if (client != null) {
+                ResStr res = client.queryService(ext);
+                log.trace("{}", res);
+                return res;
+            }
+        } catch (Exception e) {
+            log.error("查询业务信息错误", e);
             return new ResStr().setRes(0);
+        } finally {
+            pool.returnObject(client);
         }
+        return new ResStr().setRes(0);
     }
 
     /**
@@ -70,19 +82,21 @@ public class StatisticClient {
      * @return ResStr
      */
     public ResStr queryConnection(int serviceType, String ext) {
-        try (TTransport transport = new TFramedTransport(new TSocket(host, port, timeout))) {
-            transport.open();
-            TProtocol protocol = new TBinaryProtocol(transport);
-            RPCManagerStub.Client client = new RPCManagerStub.Client(protocol);
-            return client.queryConntrack(serviceType, ext);
-        } catch (TTransportException e) {
-            log.error("", e);
-            throw new RuntimeException("建立RPC链接失败");
-        } catch (TException e) {
-            log.error("查询链接信息失败, serviceType: {}, ext: {}", serviceType, ext, e);
+        RPCManagerStub.Client client = null;
+        try {
+            client = pool.borrowObject();
+            if (client != null) {
+                ResStr res = client.queryConntrack(serviceType, ext);
+                log.trace("{}", res);
+                return res;
+            }
+        } catch (Exception e) {
+            log.error("查询链接信息失败", e);
             return new ResStr().setRes(0);
+        } finally {
+            pool.returnObject(client);
         }
-
+        return new ResStr().setRes(0);
     }
 
     /**
@@ -94,17 +108,29 @@ public class StatisticClient {
      * @return ResStr
      */
     public ResStr queryDetail(int serviceType, int proxyId, String ext) {
-        try (TTransport transport = new TFramedTransport(new TSocket(host, port, timeout))) {
-            transport.open();
-            TProtocol protocol = new TBinaryProtocol(transport);
-            RPCManagerStub.Client client = new RPCManagerStub.Client(protocol);
-            return client.queryDetail(serviceType, proxyId, ext);
-        } catch (TTransportException e) {
-            log.error("", e);
-            throw new RuntimeException("建立RPC链接失败");
-        } catch (TException e) {
-            log.error("查询链接信息失败, serviceType: {}, proxyId: {} ext: {}", serviceType, proxyId, ext, e);
+        RPCManagerStub.Client client = null;
+        try {
+            client = pool.borrowObject();
+            if (client != null) {
+                ResStr res = client.queryDetail(serviceType, proxyId, ext);
+                log.trace("{}", res);
+                return res;
+            }
+        } catch (Exception e) {
+            log.error("查询链接详情失败", e);
             return new ResStr().setRes(0);
+        } finally {
+            pool.returnObject(client);
         }
+        return new ResStr().setRes(0);
+    }
+
+    public void init() {
+        ClientFactory clientFactory = ClientFactory.builder().host(host).port(port).timeout(timeout).build();
+        pool = new ClientPool(clientFactory);
+    }
+
+    public void destroy() {
+        pool.close();
     }
 }
