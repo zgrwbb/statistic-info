@@ -4,7 +4,6 @@ import com.xdja.iss.thrift.datatype.ResStr;
 import com.xdja.iss.thrift.stub.RPCManagerStub;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.pool2.impl.GenericObjectPool;
 
 /**
  * @author wbb
@@ -12,9 +11,8 @@ import org.apache.commons.pool2.impl.GenericObjectPool;
 @Slf4j
 @SuppressWarnings({"java:S112", "java:S1192", "java:S2696", "unused", "java:S1226", "java:S1854"})
 public class StatisticClient {
-
     @Getter
-    public static GenericObjectPool<RPCManagerStub.Client> pool;
+    private static ClientPool pool;
     @Getter
     private final int timeout;
     @Getter
@@ -34,7 +32,6 @@ public class StatisticClient {
      * @param ext ext
      * @return ResStr
      */
-
     public ResStr queryService(String ext) {
         RPCManagerStub.Client client = null;
         try {
@@ -105,8 +102,7 @@ public class StatisticClient {
     }
 
     public void init() {
-        ClientFactory clientFactory = ClientFactory.builder().host(host).port(port).timeout(timeout).build();
-        pool = new ClientPool(clientFactory);
+        pool = new ClientPool(ClientFactory.builder().host(host).port(port).timeout(timeout).build());
     }
 
     public void destroy() {

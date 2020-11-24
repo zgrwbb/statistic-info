@@ -11,8 +11,4 @@ public class ClientPool extends GenericObjectPool<RPCManagerStub.Client> {
     public ClientPool(ClientFactory clientFactory) {
         super(clientFactory, new ClientConfig());
     }
-
-    public ClientPool(ClientFactory clientFactory, ClientConfig clientConfig) {
-        super(clientFactory, clientConfig);
-    }
 }

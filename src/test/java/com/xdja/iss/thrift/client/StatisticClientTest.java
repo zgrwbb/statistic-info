@@ -5,6 +5,8 @@ import com.xdja.iss.thrift.stub.RPCManagerStub;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 /**
  * @author Created by wbb on 2020/11/23 18:10:02
  */
@@ -18,16 +20,16 @@ class StatisticClientTest {
         statisticClient.init();
         RPCManagerStub.Client client = null;
         try {
-            client = StatisticClient.pool.borrowObject();
+            client = StatisticClient.getPool().borrowObject();
             if (client != null) {
                 ResStr res = client.echo("OK");
                 log.info("{}", res);
+                assertEquals("OK", res.value);
             }
         } catch (Exception e) {
             log.error("", e);
         } finally {
-            StatisticClient.pool.returnObject(client);
+            StatisticClient.getPool().returnObject(client);
         }
     }
-
 }
