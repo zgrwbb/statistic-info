@@ -1,8 +1,11 @@
 package com.xdja.iss.thrift.client;
 
 import com.xdja.iss.thrift.datatype.ResStr;
+import com.xdja.iss.thrift.pool.ClientFactory;
+import com.xdja.iss.thrift.pool.ClientPool;
 import com.xdja.iss.thrift.stub.RPCManagerStub;
 import lombok.Getter;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -12,18 +15,10 @@ import lombok.extern.slf4j.Slf4j;
 @SuppressWarnings({"java:S112", "java:S1192", "java:S2696", "unused", "java:S1226", "java:S1854"})
 public class StatisticClient {
     @Getter
-    private static ClientPool pool;
-    @Getter
-    private final int timeout;
-    @Getter
-    private final String host;
-    @Getter
-    private final int port;
+    private final ClientPool pool;
 
-    public StatisticClient(String host, int port, int timeout) {
-        this.host = host;
-        this.port = port;
-        this.timeout = timeout;
+    public StatisticClient(String host, Integer port, Integer timeout) {
+        pool = new ClientPool(ClientFactory.builder().host(host).port(port).timeout(timeout).build());
     }
 
     /**
@@ -32,22 +27,29 @@ public class StatisticClient {
      * @param ext ext
      * @return ResStr
      */
+    @SneakyThrows
     public ResStr queryService(String ext) {
         RPCManagerStub.Client client = null;
         try {
-            client = pool.borrowObject();
-            if (client != null) {
-                ResStr res = client.queryService(ext);
-                log.trace("{}", res);
-                return res;
-            }
-        } catch (Exception e) {
-            log.error("查询业务信息错误", e);
-            return new ResStr().setRes(0);
+            client = getClient();
+            ResStr res = client.queryService(ext);
+            log.trace("{}", res);
+            return res;
         } finally {
-            pool.returnObject(client);
+            close(client);
         }
-        return new ResStr().setRes(0);
+    }
+
+    @SneakyThrows
+    public RPCManagerStub.Client getClient() {
+        return pool.borrowObject();
+    }
+
+    public void close(RPCManagerStub.Client client) {
+        if (client == null) {
+            return;
+        }
+        pool.returnObject(client);
     }
 
     /**
@@ -57,22 +59,17 @@ public class StatisticClient {
      * @param ext         ext
      * @return ResStr
      */
+    @SneakyThrows
     public ResStr queryConnection(int serviceType, String ext) {
         RPCManagerStub.Client client = null;
         try {
-            client = pool.borrowObject();
-            if (client != null) {
-                ResStr res = client.queryConntrack(serviceType, ext);
-                log.trace("{}", res);
-                return res;
-            }
-        } catch (Exception e) {
-            log.error("查询链接信息失败", e);
-            return new ResStr().setRes(0);
+            client = getClient();
+            ResStr res = client.queryConntrack(serviceType, ext);
+            log.trace("{}", res);
+            return res;
         } finally {
-            pool.returnObject(client);
+            close(client);
         }
-        return new ResStr().setRes(0);
     }
 
     /**
@@ -83,29 +80,16 @@ public class StatisticClient {
      * @param ext         ext
      * @return ResStr
      */
+    @SneakyThrows
     public ResStr queryDetail(int serviceType, int proxyId, String ext) {
         RPCManagerStub.Client client = null;
         try {
-            client = pool.borrowObject();
-            if (client != null) {
-                ResStr res = client.queryDetail(serviceType, proxyId, ext);
-                log.trace("{}", res);
-                return res;
-            }
-        } catch (Exception e) {
-            log.error("查询链接详情失败", e);
-            return new ResStr().setRes(0);
+            client = getClient();
+            ResStr res = client.queryDetail(serviceType, proxyId, ext);
+            log.trace("{}", res);
+            return res;
         } finally {
-            pool.returnObject(client);
+            close(client);
         }
-        return new ResStr().setRes(0);
-    }
-
-    public void init() {
-        pool = new ClientPool(ClientFactory.builder().host(host).port(port).timeout(timeout).build());
-    }
-
-    public void destroy() {
-        pool.close();
     }
 }
