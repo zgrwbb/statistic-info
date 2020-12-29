@@ -20,7 +20,7 @@ public class ClientConfig extends GenericObjectPoolConfig<RPCManagerStub.Client>
         // 在归还对象的时候检查有效性, 默认false
         setTestOnReturn(false);
         // 在空闲时检查有效性, 默认false
-        setTestWhileIdle(false);
+        setTestWhileIdle(true);
         // 最大等待时间， 默认的值为-1，表示无限等待。
         setMaxWaitMillis(5000);
         // 是否启用后进先出, 默认true

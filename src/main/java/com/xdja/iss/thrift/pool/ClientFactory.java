@@ -1,5 +1,6 @@
 package com.xdja.iss.thrift.pool;
 
+import com.xdja.iss.thrift.datatype.ResStr;
 import com.xdja.iss.thrift.stub.RPCManagerStub;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +38,15 @@ public class ClientFactory extends BasePooledObjectFactory<RPCManagerStub.Client
 
     @Override
     public boolean validateObject(PooledObject<RPCManagerStub.Client> client) {
-        return client.getObject().getInputProtocol().getTransport().isOpen();
+        try {
+            if (!client.getObject().getInputProtocol().getTransport().isOpen()) {
+                return false;
+            }
+            ResStr ok = client.getObject().echo("OK");
+            return "OK".equals(ok.getValue());
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     @Override
@@ -46,4 +55,6 @@ public class ClientFactory extends BasePooledObjectFactory<RPCManagerStub.Client
             client.getObject().getInputProtocol().getTransport().close();
         }
     }
+
+
 }
